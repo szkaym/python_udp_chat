@@ -3,12 +3,7 @@ import sys
 import threading
 import os
 
-class chatUtilityClass:
-
-    def __init__(self):
-        self.socket_ = None
-
-class chatClientClass:
+class chatClient:
     @classmethod
     def __init__(self):
         # create socket
@@ -25,7 +20,8 @@ class chatClientClass:
         while True:
             message = input('> ')
             if message == ':quit':
-                self.close_()
+                self.socket_.sendto( bytearray('quit', 'UTF-8'), (inetmask, 6081) )
+                self._close()
                 sys.exit(0)
             elif message == ':help':
                 print('chat tool version 0.1')
@@ -35,14 +31,37 @@ class chatClientClass:
                 print('type => :help')
                 print('        display help')
             else:
-                self.socket_.sendto( bytearray(message, 'UTF-8'), (inetmask, port) )
+                self.socket_.sendto( bytearray(message, 'UTF-8'), (inetmask, 6081) )
 
     @classmethod
-    def close_(self):
+    def _close(self):
         self.socket_.close()
 
-class chatServerClass:
-    
+class chatDisplay:
     @classmethod
-    def create_socket_for_udp(self, ip='', port=6080):
-        print('')
+    def __init__(self, password_):
+        # shutdown password
+        self.password = password_
+        # create socket
+        self.socket_ = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    @classmethod
+    def start_(self, inetmask, port):
+        shutdownSignal = 0
+        self.socket_.bind(('', port))
+        while True: 
+            message, ip_address = self.socket_.recvfrom(4096)
+            decode_message = message.decode('UTF-8')
+            if decode_message == ':shutdown':
+                shutdownSignal=1
+                print('please input startup password.')
+            elif shutdownSignal:
+                if (self.password == decode_message):
+                    print('shutdown...')
+                    self.socket_.close()
+                    sys.exit()
+                else:
+                    print('password is not match.')
+            else:
+                print( '[%s] %s' % (ip_address[0], decode_message) )
+        sys.exit()

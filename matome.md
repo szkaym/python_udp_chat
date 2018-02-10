@@ -19,7 +19,7 @@
 import socket
 
 ip = ''
-port = 61080
+port = 6080
 
 soc = socket.socket(socket.AF_INET, socket.SOC_DGRAM)
 
