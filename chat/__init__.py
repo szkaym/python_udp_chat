@@ -26,8 +26,10 @@ class chatClient:
             elif message == ':help':
                 print('chat tool version 0.1')
                 print('---------------------')
-                print('type => :quit')
-                print('        exit chat')
+                print('type => :quit display')
+                print('        exit display')
+                print('type => :help')
+                print('        display help')
                 print('type => :help')
                 print('        display help')
             else:
@@ -52,12 +54,12 @@ class chatDisplay:
         while True: 
             message, ip_address = self.socket_.recvfrom(4096)
             decode_message = message.decode('UTF-8')
-            if decode_message == ':shutdown':
+            if decode_message == ':quit display':
                 shutdownSignal=1
                 print('please input startup password.')
             elif shutdownSignal:
                 if (self.password == decode_message):
-                    print('shutdown...')
+                    print('display is shutdown')
                     self.socket_.close()
                     sys.exit()
                 else:
