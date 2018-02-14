@@ -27,9 +27,9 @@ class chatClient:
                 print('chat tool version 0.1')
                 print('---------------------')
                 print('type => :quit display')
-                print('        exit display')
-                print('type => :help')
-                print('        display help')
+                print('        exit display.py')
+                print('type => :quit')
+                print('        exit client.py')
                 print('type => :help')
                 print('        display help')
             else:
