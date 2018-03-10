@@ -1,7 +1,7 @@
 import socket
 import sys
-import threading
 import os
+import threading
 
 class chatClient:
     @classmethod
@@ -10,60 +10,52 @@ class chatClient:
         self.socket_ = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # set broad cast option
         self.socket_.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.socket_.bind(('', 6080))
     
     @classmethod
     def start_(self, inetmask, port):
-        """
-        socket client start
-        """
-        self.socket_.bind(('', port))
-        while True:
-            message = input('> ')
-            if message == ':quit':
-                self.socket_.sendto( bytearray('quit', 'UTF-8'), (inetmask, 6081) )
-                self._close()
-                sys.exit(0)
-            elif message == ':help':
-                print('chat tool version 0.1')
-                print('---------------------')
-                print('type => :quit display')
-                print('        exit display.py')
-                print('type => :quit')
-                print('        exit client.py')
-                print('type => :help')
-                print('        display help')
-            else:
-                self.socket_.sendto( bytearray(message, 'UTF-8'), (inetmask, 6081) )
+        message = input('')
+        if message == ':quit':
+            self.socket_.sendto( bytearray(':quit', 'UTF-8'), (inetmask, 6081) )
+            self._close()
+        elif message == ':help':
+            print('chat tool version 0.2')
+            print('---------------------')
+            print('type => :quit')
+            print('        exit client.py')
+            print('type => :help')
+            print('        display help')
+        else:
+            self.socket_.sendto( bytearray(message, 'UTF-8'), (inetmask, 6081) )
+        self.start_(inetmask=inetmask, port=port)
 
     @classmethod
     def _close(self):
         self.socket_.close()
+        sys.exit()
 
 class chatDisplay:
     @classmethod
-    def __init__(self, password_):
+    def __init__(self):
         # shutdown password
-        self.password = password_
         # create socket
         self.socket_ = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket_.bind(('', 6081))
 
     @classmethod
     def start_(self, inetmask, port):
-        shutdownSignal = 0
-        self.socket_.bind(('', port))
-        while True: 
-            message, ip_address = self.socket_.recvfrom(4096)
-            decode_message = message.decode('UTF-8')
-            if decode_message == ':quit display':
-                shutdownSignal=1
-                print('please input startup password.')
-            elif shutdownSignal:
-                if (self.password == decode_message):
-                    print('display is shutdown')
-                    self.socket_.close()
-                    sys.exit()
-                else:
-                    print('password is not match.')
-            else:
-                print( '[%s] %s' % (ip_address[0], decode_message) )
-        sys.exit()
+        thread = threading.Thread(target=self.thread_waiting, name='th_waiting')
+        thread.start()
+    
+    @classmethod
+    def thread_waiting(self):
+        message, ip_address = self.socket_.recvfrom(4096)
+        decode_message = message.decode('UTF-8')
+        if decode_message == ':quit':
+            self.socket_.close()
+            sys.exit()
+        elif decode_message == '':
+            self.thread_waiting()
+        else:
+            print( '[%s] %s' % (ip_address[0], decode_message), sep='\n', end='\n')
+            self.thread_waiting()
